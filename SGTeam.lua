@@ -1,46 +1,43 @@
---// Serviços
-local Players = game:GetService("Players")
+--// LocalScript em StarterPlayerScripts
 
---// Obter jogador local
+-- Serviços
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Obter o jogador local
 local localPlayer = Players.LocalPlayer
 
---// Parâmetros de destino e movimento
-local targetPosition = Vector3.new(50, 5, 50)  -- Posição que você deseja alcançar
-local stepSize = 2                             -- Tamanho do “bloco” em studs (distância de cada teleporte)
-local waitTime = 0.1                           -- Tempo de espera entre cada passo (em segundos)
+-- Criar ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "PositionDisplay"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = localPlayer:WaitForChild("PlayerGui")
 
---// Função que move bloco por bloco
-local function teleportBlockByBlock(targetPos, step, delayTime)
-    -- Garante que o Character já existe
-    local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-    local hrp = character:WaitForChild("HumanoidRootPart") -- Ponto central do personagem
+-- Criar TextLabel
+local textLabel = Instance.new("TextLabel")
+textLabel.Name = "PositionLabel"
+textLabel.Size = UDim2.new(0, 200, 0, 40)
+textLabel.Position = UDim2.new(0, 10, 0, 10)  -- Canto superior esquerdo
+textLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+textLabel.BackgroundTransparency = 0.3
+textLabel.BorderSizePixel = 0
+textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+textLabel.TextScaled = true
+textLabel.Font = Enum.Font.SourceSansBold
+textLabel.Text = "Pos: 0, 0, 0"  -- Inicial
+textLabel.Parent = screenGui
 
-    -- Pega a posição inicial
-    local startPos = hrp.Position
-    local distance = (targetPos - startPos).Magnitude
+-- Função para atualizar texto com a posição
+local function updatePosition()
+    local character = localPlayer.Character
+    if not character then return end
 
-    -- Se já estiver muito perto do destino
-    if distance <= step then
-        hrp.CFrame = CFrame.new(targetPos)
-        return
-    end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
-    -- Direção unitária (vetor normalizado do ponto atual até o destino)
-    local direction = (targetPos - startPos).Unit
-
-    -- Enquanto a distância para o destino for maior que o step...
-    while (targetPos - hrp.Position).Magnitude > step do
-        -- Calcula a nova posição, somando step na direção
-        local newPos = hrp.Position + (direction * step)
-        hrp.CFrame = CFrame.new(newPos)
-
-        -- Espera um pouco antes de continuar
-        task.wait(delayTime)
-    end
-
-    -- Quando estiver a menos de "step" de distância, vai direto ao destino final
-    hrp.CFrame = CFrame.new(targetPos)
+    local pos = hrp.Position
+    textLabel.Text = string.format("Pos: %.1f, %.1f, %.1f", pos.X, pos.Y, pos.Z)
 end
 
---// Exemplo de uso ao iniciar
-teleportBlockByBlock(targetPosition, stepSize, waitTime)
+-- Atualiza a cada frame
+RunService.RenderStepped:Connect(updatePosition)
